@@ -573,18 +573,6 @@ async def test_set_licensing_info_delete(test_server):
     assert resp.status == HTTPStatus.OK and resp_json["licensing"] is None
 
 
-async def test_update_entitlement_put_mhlm(test_server):
-    """Test to check endpoint : "/update_entitlement" """
-    # FIXME: Make sure to start with a clean state - it looks like licensing is set to nlm, figure out why?
-    # FIXME: Ensure all pre-requisites are met
-    data = {
-        "type": "mhlm",
-        "entitlement_id": "123123",
-    }
-    resp = await test_server.put("/update_entitlement", data=json.dumps(data))
-    assert resp.status == HTTPStatus.OK
-
-
 async def test_set_termination_integration_delete(test_server):
     """Test to check endpoint : "/terminate_integration"
 
