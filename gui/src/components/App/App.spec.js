@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The MathWorks, Inc.
+// Copyright (c) 2020-2023 The MathWorks, Inc.
 
 import React from 'react';
 import { render, fireEvent } from '../../test/utils/react-test';
@@ -231,9 +231,6 @@ describe('App Component', () => {
     const url = 'http://localhost.com:5555/matlab/index.html'  
     
     // define new complete url for document.URL for baseUrl variable to evaluate correctly
-    // As the tests are run in a NodeJS environment where as the correct values for document.URL and window.location.href
-    // are set by the browser, set the appropriate values for document.URL, window.location.href and window.location.origin
-    // for the component to render without errors
     delete document.URL;
     document = {URL: url}
 
