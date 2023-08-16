@@ -14,20 +14,20 @@ import Information from '../Information';
 import Help from '../Help';
 import Error from '../Error';
 import {
-    selectOverlayVisible,
-    selectFetchStatusPeriod,
-    selectHasFetchedServerStatus,
-    selectLicensingProvided,
-    selectMatlabUp,
-    selectError,
-    selectLoadUrl,
-    selectIsConnectionError,
-    selectHasFetchedEnvConfig,
-    selectAuthEnabled,
-    selectIsAuthenticated,
-    selectLicensingMhlmHasEntitlements,
-    selectIsEntitled,
-    selectLicensingInfo,
+  selectOverlayVisible,
+  selectFetchStatusPeriod,
+  selectHasFetchedServerStatus,
+  selectLicensingProvided,
+  selectMatlabUp,
+  selectError,
+  selectLoadUrl,
+  selectIsConnectionError,
+  selectHasFetchedEnvConfig,
+  selectAuthEnabled,
+  selectIsAuthenticated,
+  selectLicensingMhlmHasEntitlements,
+  selectIsEntitled,
+  selectLicensingInfo,
 } from "../../selectors";
 
 import {
@@ -58,10 +58,10 @@ function App() {
     const licensingInfo = useSelector(selectLicensingInfo);
 
     const baseUrl = useMemo(() => {
-        const url = document.URL
+        const url = document.URL        
         return url.split(window.location.origin)[1].split('index.html')[0]
     }, [])
-
+    
     const toggleOverlayVisible = useCallback(
         () => dispatch(setOverlayVisibility(!overlayVisible)),
         [overlayVisible, dispatch]
@@ -132,10 +132,10 @@ function App() {
     // Periodic fetch server status
     useInterval(() => {
         dispatch(fetchServerStatus());
-    }, fetchStatusPeriod);
+    },  fetchStatusPeriod);
 
     // Load URL
-    useEffect(() => {
+    useEffect(() => {      
         if (loadUrl !== null) {
             window.location.href = loadUrl;
         }
@@ -143,18 +143,18 @@ function App() {
 
     useEffect(() => {
         const url = document.URL;
+      
+        if(url.includes("?mwi_auth_token=")){            
+            var token = url.split("?mwi_auth_token=")[1];      
 
-        if (url.includes("?mwi_auth_token=")) {
-            var token = url.split("?mwi_auth_token=")[1];
-
-            if (token) {
-                dispatch(updateAuthStatus(token))
+            if(token){
+                dispatch(updateAuthStatus(token))                
             }
             window.history.replaceState(null, '', `${baseUrl}index.html`);
-        }
+        } 
     }
-        , [dispatch, baseUrl]);
-
+    , [dispatch, baseUrl]);
+    
     // Display one of:
     // * Confirmation
     // * Help
@@ -162,20 +162,19 @@ function App() {
     // * License gatherer
     // * License selector
     // * Status Information
-    let overlayContent;
+    let overlayContent;   
 
     if (dialog) {
         // TODO Inline confirmation component build
         overlayContent = dialog;
-    }
+    }    
     // Give precedence to token auth over licensing info ie. once after token auth is done, show licensing if not provided.
-    else if ((!licensingProvided) && hasFetchedServerStatus && (!authEnabled || isAuthenticated)) {
+    else if((!licensingProvided) && hasFetchedServerStatus && (!authEnabled || isAuthenticated)) {    
         overlayContent = <LicensingGatherer role="licensing" aria-describedby="license-window" />;
-    }
+    } 
     // Show license selector if the user has entitlements and is not currently entitled
     else if (hasEntitlements && !isEntitled) {
         const options = licensingInfo.entitlements.map((entitlement) => {
-            // We skip this entry in case for some reason we don't get a license number from mhlm
             if (entitlement.license_number === null) {
                 return null;
             }
@@ -187,7 +186,7 @@ function App() {
             };
         }).filter(option => option !== null);
         overlayContent = <EntitlementSelector options={options} />;
-    }
+  }
     // in all other cases, we will either ask for the token, 
     else if (!dialog) {
         overlayContent = (
@@ -212,10 +211,10 @@ function App() {
         : './index-jsd-cr.html';
 
     let matlabJsd = null;
-    if (matlabUp) {
-        matlabJsd = (!authEnabled || isAuthenticated)
-            ? (<MatlabJsd url={matlabUrl} />)
-            : <img style={{ objectFit: 'fill' }} src={blurredBackground} alt='Blurred MATLAB environment' />
+    if(matlabUp){
+        matlabJsd = (!authEnabled || isAuthenticated) 
+        ? ( <MatlabJsd url={matlabUrl} /> ) 
+        : <img style={{objectFit: 'fill'}}src={blurredBackground} alt='Blurred MATLAB environment'/> 
     }
 
     const overlayTrigger = overlayVisible ? null : <OverlayTrigger />;
