@@ -175,7 +175,7 @@ function App() {
     // Show license selector if the user has entitlements and is not currently entitled
     else if (hasEntitlements && !isEntitled) {
         const options = licensingInfo.entitlements.map((entitlement) => {
-            if (entitlement.license_number === null) {
+            if (!entitlement.license_number || entitlement.license_number.trim() === "") {
                 return null;
             }
             const labelPrefix = entitlement.license_number;
