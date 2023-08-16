@@ -168,16 +168,20 @@ function App() {
         // TODO Inline confirmation component build
         overlayContent = dialog;
     }    
-    // Give precendence to token auth over licensing info ie. once after token auth is done, show licensing if not provided.
+    // Give precedence to token auth over licensing info ie. once after token auth is done, show licensing if not provided.
     else if((!licensingProvided) && hasFetchedServerStatus && (!authEnabled || isAuthenticated)) {    
         overlayContent = <LicensingGatherer role="licensing" aria-describedby="license-window" />;
     } 
     // Show license selector if the user has entitlements and is not currently entitled
     else if (hasEntitlements && !isEntitled) {
-        const options = licensingInfo.entitlements.map((entitlement) => ({
-            label: entitlement.license_number,
-            value: entitlement.id,
-          }));
+        const options = licensingInfo.entitlements.map((entitlement) => {
+            const labelPrefix = entitlement.license_number;
+            const labelSuffix = entitlement.label !== null ? ` - ${entitlement.label}` : ` - License information not available`;
+            return {
+                label: labelPrefix + labelSuffix,
+                value: entitlement.id,
+            };
+        });
         overlayContent = <EntitlementSelector options={options} />;
   }
     // in all other cases, we will either ask for the token, 
