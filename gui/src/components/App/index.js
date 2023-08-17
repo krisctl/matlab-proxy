@@ -174,19 +174,8 @@ function App() {
     } 
     // Show license selector if the user has entitlements and is not currently entitled
     else if (hasEntitlements && !isEntitled) {
-        const options = licensingInfo.entitlements.map((entitlement) => {
-            if (!entitlement.license_number || entitlement.license_number.trim() === "") {
-                return null;
-            }
-            const labelPrefix = entitlement.license_number;
-            const labelSuffix = entitlement.label !== null ? ` - ${entitlement.label}` : ` - License information not available`;
-            return {
-                label: labelPrefix + labelSuffix,
-                value: entitlement.id,
-            };
-        }).filter(option => option !== null);
-        overlayContent = <EntitlementSelector options={options} />;
-  }
+        overlayContent = <EntitlementSelector options={licensingInfo.entitlements} />;
+    }
     // in all other cases, we will either ask for the token, 
     else if (!dialog) {
         overlayContent = (
