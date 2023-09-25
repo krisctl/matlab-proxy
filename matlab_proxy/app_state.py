@@ -632,11 +632,11 @@ class AppState:
 
         # Env setup related to logging
         # Very verbose logging in debug mode
-        # if logger.isEnabledFor(logging.getLevelName("DEBUG")):
-        #     matlab_env["MW_DIAGNOSTIC_DEST"] = "stdout"
-        #     matlab_env[
-        #         "MW_DIAGNOSTIC_SPEC"
-        #     ] = "connector::http::server=all;connector::lifecycle=all"
+        if logger.isEnabledFor(logging.getLevelName("DEBUG")):
+            matlab_env["MW_DIAGNOSTIC_DEST"] = "stdout"
+            matlab_env[
+                "MW_DIAGNOSTIC_SPEC"
+            ] = "connector::http::server=all;connector::lifecycle=all"
 
         # TODO Introduce a warmup flag to enable this?
         # matlab_env["CONNECTOR_CONFIGURABLE_WARMUP_TASKS"] = "warmup_hgweb"
