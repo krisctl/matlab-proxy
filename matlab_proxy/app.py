@@ -119,7 +119,7 @@ async def create_status_response(app, loadUrl=None):
     )
 
 
-# TODO: Protect this endpoint once the decorator is available
+@token_auth.authenticate_access_decorator
 async def get_auth_token(req):
     """API endpoint to return the auth token
 
@@ -129,8 +129,7 @@ async def get_auth_token(req):
     Returns:
         Response: auth token in JSON format
     """
-    state = req.app["state"]
-    auth_token = state.settings.get("mwi_auth_token")
+    auth_token = await token_auth._get_token(req)
 
     return web.json_response(
         {

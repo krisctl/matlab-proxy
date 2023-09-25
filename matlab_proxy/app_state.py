@@ -278,11 +278,7 @@ class AppState:
 
         # Include token information into the headers if authentication is enabled.
         headers = (
-            {
-                self.settings["mwi_auth_token_name"]: self.settings[
-                    "mwi_auth_token_shasum"
-                ]
-            }
+            {self.settings["mwi_auth_token_name"]: self.settings["mwi_auth_token_hash"]}
             if self.settings["mwi_is_token_auth_enabled"]
             else None
         )

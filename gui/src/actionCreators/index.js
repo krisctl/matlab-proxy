@@ -218,11 +218,11 @@ export function updateAuthStatus(token) {
     // make response consistent with rest of reducers (data)
     return async function (dispatch, getState) {
 
-        const hashDigest = sha256(token)
+        const tokenHash = sha256(token)
         const options = {
             method: 'POST',
             headers: {
-                'mwi_auth_token': hashDigest
+                'mwi_auth_token': tokenHash
             },
         };
         const response = await fetchWithTimeout(dispatch, './authenticate', options, 15000);

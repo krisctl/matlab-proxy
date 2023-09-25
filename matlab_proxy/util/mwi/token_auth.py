@@ -19,9 +19,9 @@ logger = mwi_logger.get()
 ## Module Public Methods:
 
 
-def generate_mwi_auth_token_and_digest():
+def generate_mwi_auth_token_and_hash():
     """
-    Generate the MWI Token and a shasum for that token to be used by the server,
+    Generate the MWI Token and a hash for that token to be used by the server,
     based on the environment variables that control it.
 
     If MWI_AUTH_TOKEN is set then assume that the user wants authentication
@@ -30,7 +30,7 @@ def generate_mwi_auth_token_and_digest():
 
     If MWI_ENABLE_TOKEN_AUTH is set, and MWI_AUTH_TOKEN is unset, then generate a token.
 
-    Returns the Token and its shasum to be used for authentication if enabled.
+    Returns the Token and its hash to be used for authentication if enabled.
     Returns None, if Token-Based Authentication is not enabled by user.
     """
     mwi_enable_auth_token = os.getenv(
@@ -52,20 +52,26 @@ def generate_mwi_auth_token_and_digest():
             logger.warn(
                 "Ignoring MWI_AUTH_TOKEN, as MWI_ENABLE_AUTH_TOKEN explicitly set to false"
             )
-            return None, None
+            return {"token": None, "token_hash": None}
         else:
             # Strip leading and trailing whitespaces if token is not None.
             mwi_auth_token = mwi_auth_token.strip()
             logger.debug(f"Using provided mwi_auth_token.")
-            return mwi_auth_token, _generate_hash(mwi_auth_token)
+            return {
+                "token": mwi_auth_token,
+                "token_hash": _generate_hash(mwi_auth_token),
+            }
     else:
         if is_auth_explicitly_enabled:
             random_token = secrets.token_urlsafe()
             # Generate a url safe token
-            return random_token, _generate_hash(random_token)
+            return {
+                "token": random_token,
+                "token_hash": _generate_hash(random_token),
+            }
 
     # Return none in all other cases
-    return None, None
+    return {"token": None, "token_hash": None}
 
 
 def get_mwi_auth_token_access_str(app_settings):
@@ -160,6 +166,19 @@ async def _get_token(request):
     return app_settings[await _get_token_name(request)]
 
 
+async def _get_token_hash(request):
+    """Gets the hashed value of secret token from settings.
+
+    Args:
+        request (HTTPRequest) : Used to get to app settings
+
+    Returns:
+        str : token hash
+    """
+    app_settings = request.app["settings"]
+    return app_settings["mwi_auth_token_hash"]
+
+
 async def _store_token_into_session(request):
     """Stores the token into the session cookie."""
     # Always use `new_session` during login to guard against
@@ -167,8 +186,7 @@ async def _store_token_into_session(request):
     session = await new_session(request)
 
     # Stash token in session for other endpoints
-    app_settings = request.app["settings"]
-    session[await _get_token_name(request)] = app_settings["mwi_auth_token_shasum"]
+    session[await _get_token_name(request)] = await _get_token_hash(request)
     logger.debug(f"Created session and saved cookie.")
 
 
@@ -192,8 +210,7 @@ async def _is_valid_token(token, request):
     Returns:
         _type_: True is token is valid, false otherwise.
     """
-    app_settings = request.app["settings"]
-    expected_token = app_settings["mwi_auth_token_shasum"]
+    expected_token = await _get_token_hash(request)
     # equivalent to a == b, but protects against timing attacks
     is_valid = compare_digest(token, expected_token)
     logger.debug("Token validation " + ("successful." if is_valid else "failed."))
@@ -274,7 +291,7 @@ def _generate_hash(message) -> str:
     """Util function to generate a sha256 hash for a message
 
     Args:
-        message (str): message/token to be hashed
+        message (str): message to be hashed
 
     Returns:
         str: sha256 hash for a given message

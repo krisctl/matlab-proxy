@@ -115,10 +115,10 @@ def get_dev_settings(config):
     devel_file = Path(__file__).resolve().parent / "./devel.py"
     mwi_config_folder = get_mwi_config_folder(dev=True)
     ws_env, ws_env_suffix = get_ws_env_settings()
-    (
-        mwi_auth_token,
-        mwi_auth_token_shasum,
-    ) = token_auth.generate_mwi_auth_token_and_digest()
+    token_with_hash = token_auth.generate_mwi_auth_token_and_hash()
+    mwi_auth_token, mwi_auth_token_hash = map(
+        token_with_hash.get, ("token", "token_hash")
+    )
     return {
         "error": None,
         "matlab_path": Path(),
@@ -151,7 +151,7 @@ def get_dev_settings(config):
         "mwi_is_token_auth_enabled": mwi_auth_token != None,
         "mwi_auth_status": False,
         "mwi_auth_token": mwi_auth_token,
-        "mwi_auth_token_shasum": mwi_auth_token_shasum,
+        "mwi_auth_token_hash": mwi_auth_token_hash,
         "mwi_auth_token_name": mwi_env.get_env_name_mwi_auth_token().lower(),
         "mwi_use_existing_license": mwi.validators.validate_use_existing_licensing(
             os.getenv(mwi_env.get_env_name_mwi_use_existing_license(), "")
@@ -231,10 +231,10 @@ def get_server_settings(config_name):
     This function is not exception safe, and all exceptions will result in the termination of the app.
     If you need to add exceptions which need to be presented in the UI, add them to get_matlab_settings
     """
-    (
-        mwi_auth_token,
-        mwi_auth_token_shasum,
-    ) = token_auth.generate_mwi_auth_token_and_digest()
+    token_with_hash = token_auth.generate_mwi_auth_token_and_hash()
+    mwi_auth_token, mwi_auth_token_hash = map(
+        token_with_hash.get, ("token", "token_hash")
+    )
     mwi_config_folder = get_mwi_config_folder()
     ssl_key_file, ssl_cert_file = mwi.validators.validate_ssl_key_and_cert_file(
         os.getenv(mwi_env.get_env_name_ssl_key_file(), None),
@@ -265,7 +265,7 @@ def get_server_settings(config_name):
         "mwi_is_token_auth_enabled": mwi_auth_token != None,
         "mwi_auth_status": False,
         "mwi_auth_token": mwi_auth_token,
-        "mwi_auth_token_shasum": mwi_auth_token_shasum,
+        "mwi_auth_token_hash": mwi_auth_token_hash,
         "mwi_auth_token_name": mwi_env.get_env_name_mwi_auth_token().lower(),
         "mwi_use_existing_license": mwi.validators.validate_use_existing_licensing(
             os.getenv(mwi_env.get_env_name_mwi_use_existing_license(), "")
