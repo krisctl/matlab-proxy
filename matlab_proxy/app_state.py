@@ -278,7 +278,11 @@ class AppState:
 
         # Include token information into the headers if authentication is enabled.
         headers = (
-            {self.settings["mwi_auth_token_name"]: self.settings["mwi_auth_token"]}
+            {
+                self.settings["mwi_auth_token_name"]: self.settings[
+                    "mwi_auth_token_shasum"
+                ]
+            }
             if self.settings["mwi_is_token_auth_enabled"]
             else None
         )
@@ -628,11 +632,11 @@ class AppState:
 
         # Env setup related to logging
         # Very verbose logging in debug mode
-        if logger.isEnabledFor(logging.getLevelName("DEBUG")):
-            matlab_env["MW_DIAGNOSTIC_DEST"] = "stdout"
-            matlab_env[
-                "MW_DIAGNOSTIC_SPEC"
-            ] = "connector::http::server=all;connector::lifecycle=all"
+        # if logger.isEnabledFor(logging.getLevelName("DEBUG")):
+        #     matlab_env["MW_DIAGNOSTIC_DEST"] = "stdout"
+        #     matlab_env[
+        #         "MW_DIAGNOSTIC_SPEC"
+        #     ] = "connector::http::server=all;connector::lifecycle=all"
 
         # TODO Introduce a warmup flag to enable this?
         # matlab_env["CONNECTOR_CONFIGURABLE_WARMUP_TASKS"] = "warmup_hgweb"

@@ -12,15 +12,16 @@ from hmac import compare_digest
 from urllib.parse import parse_qs
 
 from matlab_proxy.util.mwi import logger as mwi_logger
+from hashlib import sha256
 
 logger = mwi_logger.get()
 
 ## Module Public Methods:
 
 
-def generate_mwi_auth_token():
+def generate_mwi_auth_token_and_digest():
     """
-    Generate the MWI Token to be used by the server,
+    Generate the MWI Token and a shasum for that token to be used by the server,
     based on the environment variables that control it.
 
     If MWI_AUTH_TOKEN is set then assume that the user wants authentication
@@ -29,7 +30,7 @@ def generate_mwi_auth_token():
 
     If MWI_ENABLE_TOKEN_AUTH is set, and MWI_AUTH_TOKEN is unset, then generate a token.
 
-    Returns the Token to be used for authentication if enabled.
+    Returns the Token and its shasum to be used for authentication if enabled.
     Returns None, if Token-Based Authentication is not enabled by user.
     """
     mwi_enable_auth_token = os.getenv(
@@ -51,19 +52,20 @@ def generate_mwi_auth_token():
             logger.warn(
                 "Ignoring MWI_AUTH_TOKEN, as MWI_ENABLE_AUTH_TOKEN explicitly set to false"
             )
-            return None
+            return None, None
         else:
             # Strip leading and trailing whitespaces if token is not None.
             mwi_auth_token = mwi_auth_token.strip()
             logger.debug(f"Using provided mwi_auth_token.")
-            return mwi_auth_token
+            return mwi_auth_token, _generate_hash(mwi_auth_token)
     else:
         if is_auth_explicitly_enabled:
+            random_token = secrets.token_urlsafe()
             # Generate a url safe token
-            return secrets.token_urlsafe()
+            return random_token, _generate_hash(random_token)
 
     # Return none in all other cases
-    return None
+    return None, None
 
 
 def get_mwi_auth_token_access_str(app_settings):
@@ -165,7 +167,8 @@ async def _store_token_into_session(request):
     session = await new_session(request)
 
     # Stash token in session for other endpoints
-    session[await _get_token_name(request)] = await _get_token(request)
+    app_settings = request.app["settings"]
+    session[await _get_token_name(request)] = app_settings["mwi_auth_token_shasum"]
     logger.debug(f"Created session and saved cookie.")
 
 
@@ -190,7 +193,7 @@ async def _is_valid_token(token, request):
         _type_: True is token is valid, false otherwise.
     """
     app_settings = request.app["settings"]
-    expected_token = app_settings["mwi_auth_token"]
+    expected_token = app_settings["mwi_auth_token_shasum"]
     # equivalent to a == b, but protects against timing attacks
     is_valid = compare_digest(token, expected_token)
     logger.debug("Token validation " + ("successful." if is_valid else "failed."))
@@ -265,3 +268,17 @@ async def _is_valid_token_in_headers(request):
 
     logger.debug("Token not found in request headers.")
     return False
+
+
+def _generate_hash(message) -> str:
+    """Util function to generate a sha256 hash for a message
+
+    Args:
+        message (str): message/token to be hashed
+
+    Returns:
+        str: sha256 hash for a given message
+    """
+    md = sha256()
+    md.update(message.encode())
+    return md.hexdigest()
