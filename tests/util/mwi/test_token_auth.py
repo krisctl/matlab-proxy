@@ -1,12 +1,13 @@
 # Copyright (c) 2023 The MathWorks, Inc.
 
+import pytest
 from aiohttp import web
 from aiohttp_session import setup as aiohttp_session_setup
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography import fernet
+
 from matlab_proxy.util.mwi import environment_variables as mwi_env
 from matlab_proxy.util.mwi import token_auth
-import pytest
 
 ## APIs to test:
 # 1. generate_mwi_auth_token (auth enabled, auth enabled+custom token, custom token, auth disabled)
@@ -84,10 +85,10 @@ def fake_server_with_auth_enabled(
     )
     monkeypatch.setenv(mwi_env.get_env_name_mwi_auth_token(), str(auth_token))
 
-    token_with_hash = token_auth.generate_mwi_auth_token_and_hash()
-    mwi_auth_token, mwi_auth_token_hash = map(
-        token_with_hash.get, ("token", "token_hash")
-    )
+    (
+        mwi_auth_token,
+        mwi_auth_token_hash,
+    ) = token_auth.generate_mwi_auth_token_and_hash().values()
 
     app = web.Application()
     app["settings"] = {
@@ -233,10 +234,10 @@ def fake_server_without_auth_enabled(loop, aiohttp_client, monkeypatch):
     monkeypatch.setenv(
         mwi_env.get_env_name_enable_mwi_auth_token(), str(auth_enablement)
     )
-    token_with_hash = token_auth.generate_mwi_auth_token_and_hash()
-    mwi_auth_token, mwi_auth_token_hash = map(
-        token_with_hash.get, ("token", "token_hash")
-    )
+    (
+        mwi_auth_token,
+        mwi_auth_token_hash,
+    ) = token_auth.generate_mwi_auth_token_and_hash().values()
 
     app = web.Application()
     app["settings"] = {

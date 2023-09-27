@@ -231,10 +231,10 @@ def get_server_settings(config_name):
     This function is not exception safe, and all exceptions will result in the termination of the app.
     If you need to add exceptions which need to be presented in the UI, add them to get_matlab_settings
     """
-    token_with_hash = token_auth.generate_mwi_auth_token_and_hash()
-    mwi_auth_token, mwi_auth_token_hash = map(
-        token_with_hash.get, ("token", "token_hash")
-    )
+    (
+        mwi_auth_token,
+        mwi_auth_token_hash,
+    ) = token_auth.generate_mwi_auth_token_and_hash().values()
     mwi_config_folder = get_mwi_config_folder()
     ssl_key_file, ssl_cert_file = mwi.validators.validate_ssl_key_and_cert_file(
         os.getenv(mwi_env.get_env_name_ssl_key_file(), None),

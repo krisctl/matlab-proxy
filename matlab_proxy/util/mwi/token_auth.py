@@ -4,15 +4,15 @@
 
 import os
 import secrets
-
-from aiohttp import web
-from aiohttp_session import get_session, new_session
-from matlab_proxy.util.mwi import environment_variables as mwi_env
+from hashlib import sha256
 from hmac import compare_digest
 from urllib.parse import parse_qs
 
+from aiohttp import web
+from aiohttp_session import get_session, new_session
+
+from matlab_proxy.util.mwi import environment_variables as mwi_env
 from matlab_proxy.util.mwi import logger as mwi_logger
-from hashlib import sha256
 
 logger = mwi_logger.get()
 
@@ -67,12 +67,6 @@ def generate_mwi_auth_token_and_hash():
 
     # Return none in all other cases
     return _format_token_as_dictionary(None)
-
-
-def _format_token_as_dictionary(token):
-    if token is None:
-        return {"token": None, "token_hash": None}
-    return {"token": token, "token_hash": _generate_hash(token)}
 
 
 def get_mwi_auth_token_access_str(app_settings):
@@ -211,12 +205,10 @@ async def _is_valid_token(token, request):
     Returns:
         _type_: True is token is valid, false otherwise.
     """
-    expected_token_hash = await _get_token_hash(request)
-    expected_token = await _get_token(request)
     # Check if the token provided in the request matches the hash or the original token
     # equivalent to a == b, but protects against timing attacks
-    is_valid = compare_digest(token, expected_token_hash) or compare_digest(
-        token, expected_token
+    is_valid = compare_digest(token, await _get_token_hash(request)) or compare_digest(
+        token, await _get_token(request)
     )
     logger.debug("Token validation " + ("successful." if is_valid else "failed."))
     return is_valid
@@ -292,7 +284,7 @@ async def _is_valid_token_in_headers(request):
     return False
 
 
-def _generate_hash(message) -> str:
+def _generate_hash(message):
     """Util function to generate a sha256 hash for a message
 
     Args:
@@ -301,6 +293,10 @@ def _generate_hash(message) -> str:
     Returns:
         str: sha256 hash for a given message
     """
-    md = sha256()
-    md.update(message.encode())
-    return md.hexdigest()
+    if message is None:
+        return None
+    return sha256(message.encode()).hexdigest()
+
+
+def _format_token_as_dictionary(token):
+    return {"token": token, "token_hash": _generate_hash(token)}
