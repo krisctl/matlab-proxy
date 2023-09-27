@@ -52,26 +52,27 @@ def generate_mwi_auth_token_and_hash():
             logger.warn(
                 "Ignoring MWI_AUTH_TOKEN, as MWI_ENABLE_AUTH_TOKEN explicitly set to false"
             )
-            return {"token": None, "token_hash": None}
+            return _format_token_as_dictionary(None)
         else:
             # Strip leading and trailing whitespaces if token is not None.
             mwi_auth_token = mwi_auth_token.strip()
             logger.debug(f"Using provided mwi_auth_token.")
-            return {
-                "token": mwi_auth_token,
-                "token_hash": _generate_hash(mwi_auth_token),
-            }
+            return _format_token_as_dictionary(mwi_auth_token)
     else:
         if is_auth_explicitly_enabled:
-            random_token = secrets.token_urlsafe()
             # Generate a url safe token
-            return {
-                "token": random_token,
-                "token_hash": _generate_hash(random_token),
-            }
+            generated_token = secrets.token_urlsafe()
+            logger.debug(f"Using auto generated token.")
+            return _format_token_as_dictionary(generated_token)
 
     # Return none in all other cases
-    return {"token": None, "token_hash": None}
+    return _format_token_as_dictionary(None)
+
+
+def _format_token_as_dictionary(token):
+    if token is None:
+        return {"token": None, "token_hash": None}
+    return {"token": token, "token_hash": _generate_hash(token)}
 
 
 def get_mwi_auth_token_access_str(app_settings):
@@ -179,13 +180,13 @@ async def _get_token_hash(request):
     return app_settings["mwi_auth_token_hash"]
 
 
-async def _store_token_into_session(request):
-    """Stores the token into the session cookie."""
+async def _store_token_hash_into_session(request):
+    """Stores the token hash into the session cookie."""
     # Always use `new_session` during login to guard against
     # Session Fixation. See aiohttp-session#281
     session = await new_session(request)
 
-    # Stash token in session for other endpoints
+    # Stash token hash in session for other endpoints
     session[await _get_token_name(request)] = await _get_token_hash(request)
     logger.debug(f"Created session and saved cookie.")
 
@@ -210,9 +211,13 @@ async def _is_valid_token(token, request):
     Returns:
         _type_: True is token is valid, false otherwise.
     """
-    expected_token = await _get_token_hash(request)
+    expected_token_hash = await _get_token_hash(request)
+    expected_token = await _get_token(request)
+    # Check if the token provided in the request matches the hash or the original token
     # equivalent to a == b, but protects against timing attacks
-    is_valid = compare_digest(token, expected_token)
+    is_valid = compare_digest(token, expected_token_hash) or compare_digest(
+        token, expected_token
+    )
     logger.debug("Token validation " + ("successful." if is_valid else "failed."))
     return is_valid
 
@@ -280,7 +285,7 @@ async def _is_valid_token_in_headers(request):
     if token_name in headers:
         is_valid_token = await _is_valid_token(headers[token_name], request)
         if is_valid_token:
-            await _store_token_into_session(request)
+            await _store_token_hash_into_session(request)
         return is_valid_token
 
     logger.debug("Token not found in request headers.")

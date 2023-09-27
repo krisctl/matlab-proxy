@@ -113,6 +113,36 @@ async def test_set_value_with_token(
     resp = await fake_server_with_auth_enabled.post(
         "/",
         data={"value": "foo"},
+        headers={"mwi_auth_token": get_custom_auth_token_str},
+    )
+    assert resp.status == web.HTTPOk.status_code
+    assert await resp.text() == "thanks for the data"
+    assert fake_server_with_auth_enabled.server.app["value"] == "foo"
+
+    # Test subsequent requests do not need token authentication
+    resp2 = await fake_server_with_auth_enabled.post(
+        "/",
+        data={"value": "foobar"},
+    )
+    assert resp2.status == web.HTTPOk.status_code
+    assert fake_server_with_auth_enabled.server.app["value"] == "foobar"
+
+    # Test request which accepts cookies from previous request
+    resp3 = await fake_server_with_auth_enabled.post(
+        "/",
+        data={"value": "foobar1"},
+        cookies=resp.cookies,
+    )
+    assert resp3.status == web.HTTPOk.status_code
+    assert fake_server_with_auth_enabled.server.app["value"] == "foobar1"
+
+
+async def test_set_value_with_token_hash(
+    fake_server_with_auth_enabled, get_custom_auth_token_str
+):
+    resp = await fake_server_with_auth_enabled.post(
+        "/",
+        data={"value": "foo"},
         headers={
             "mwi_auth_token": token_auth._generate_hash(get_custom_auth_token_str)
         },

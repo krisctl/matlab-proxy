@@ -115,10 +115,10 @@ def get_dev_settings(config):
     devel_file = Path(__file__).resolve().parent / "./devel.py"
     mwi_config_folder = get_mwi_config_folder(dev=True)
     ws_env, ws_env_suffix = get_ws_env_settings()
-    token_with_hash = token_auth.generate_mwi_auth_token_and_hash()
-    mwi_auth_token, mwi_auth_token_hash = map(
-        token_with_hash.get, ("token", "token_hash")
-    )
+    (
+        mwi_auth_token,
+        mwi_auth_token_hash,
+    ) = token_auth.generate_mwi_auth_token_and_hash().values()
     return {
         "error": None,
         "matlab_path": Path(),
