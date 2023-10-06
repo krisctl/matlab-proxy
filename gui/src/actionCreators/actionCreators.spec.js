@@ -139,7 +139,7 @@ describe('Test fetchWithTimeout method', () => {
     expect(body).not.toBeNull();
   });
 
-  it('dispatches RECIEVE_ERROR when no response is received', async () => {
+  it('dispatches RECEIVE_ERROR when no response is received', async () => {
 
     const expectedActions = [
       actions.RECEIVE_ERROR,
@@ -170,6 +170,9 @@ describe('Test fetchWithTimeout method', () => {
     ];
 
     await actionCreators.fetchWithTimeout(store.dispatch, '/get_status', {}, timeout);
+
+    // Wait for above asynchronous operations to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     expect(abortSpy).toBeCalledTimes(1);
     const received = store.getActions();
