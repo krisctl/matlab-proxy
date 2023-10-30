@@ -803,12 +803,12 @@ class AppState:
                     await asyncio.sleep(1)
                     continue
 
-                    else:
-                        time_diff = time.time() - self.embedded_connector_start_time
-                        if time_diff > self.PROCESS_TIMEOUT:
-                            # Since max allowed startup time has elapsed, it means that MATLAB is in a stuck state and cannot be launched.
-                            # Set the error and stop matlab.
-                            user_visible_error = "Unable to start MATLAB.\nTry again by clicking Start MATLAB."
+                else:
+                    time_diff = time.time() - self.embedded_connector_start_time
+                    if time_diff > self.PROCESS_TIMEOUT:
+                        # Since max allowed startup time has elapsed, it means that MATLAB is in a stuck state and cannot be launched.
+                        # Set the error and stop matlab.
+                        user_visible_error = "Unable to start MATLAB.\nTry again by clicking Start MATLAB."
 
                         if system.is_windows():
                             # In WINDOWS systems, errors are raised as UI windows and cannot be captured programmatically.
