@@ -3,7 +3,7 @@
 import os
 import subprocess
 from pathlib import Path
-from shutil import which, copytree
+from shutil import copytree, which
 from typing import Any, Dict
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
@@ -23,7 +23,7 @@ class CustomBuildHook(BuildHookInterface):
                 "npm must be installed and on the path during package build!"
             )
 
-        npm_install = [npm_path, "install"]
+        npm_install = [npm_path, "install", "--fetch-retries", "10"]
         npm_build = [npm_path, "run", "build"]
 
         pwd = Path.cwd()
